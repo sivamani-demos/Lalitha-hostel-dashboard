@@ -1,8 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --primary-rose: #e6206e;
+  --primary-dark: #702447;
+  --bg-warm: #faf8f6;
+}
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: #faf8f6;
+  background-color: var(--bg-warm);
   color: #2d2926;
+  scroll-behavior: smooth;
 }
 
 .btn-pink {
@@ -22,6 +30,47 @@ body {
   border-color: #e6206e;
 }
 
+/* Tab Animations */
 .tab-btn {
   transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Micro Interactions */
+.btn-spring {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+}
+.btn-spring:active {
+  transform: scale(0.95);
+}
+
+.card-hover {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -3px rgba(112, 36, 71, 0.06);
+}
+
+/* Toast Animations */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.toast-enter {
+  animation: slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.toast-exit {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+/* Drawer Backdrop */
+.drawer-backdrop {
+  background: rgba(45, 41, 38, 0.4);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.3s ease;
 }

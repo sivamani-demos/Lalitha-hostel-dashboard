@@ -1,1 +1,279 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Her Nest Hostel - Management Portal</title>
+  
+  <!-- Tailwind CSS CDN & Custom Styles -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="min-h-screen antialiased">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-stone-200/80 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center gap-3.5">
+      <div class="w-10 h-10 bg-[#702447] rounded-xl flex items-center justify-center text-white font-serif font-bold text-xl shadow-sm">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-2.33 4.67-3.5 7-3.5s7 1.17 7 3.5V19z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold text-stone-900 tracking-tight leading-none">Her Nest Hostel</h1>
+        <p class="text-xs font-medium text-stone-400 mt-1">Owner dashboard</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-4 text-xs font-medium text-stone-500">
+      <span id="syncStatus" class="flex items-center gap-1.5 text-stone-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Ready
+      </span>
+      <button id="refreshBtn" class="p-2 hover:bg-stone-100 rounded-full transition-all" title="Force Refresh">
+        <svg id="syncIcon" class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </button>
+      <button onclick="switchTab('onboard')" class="btn-pink px-4 py-2 rounded-full font-bold shadow-sm transition-all flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg> Add resident
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <div class="bg-white border-b border-stone-200/80 px-8">
+    <nav class="flex gap-8 text-sm font-semibold text-stone-500 overflow-x-auto">
+      <button onclick="switchTab('overview')" class="py-4 border-b-2 border-pink-theme text-pink-theme font-bold tab-btn" id="tab-overview">Overview</button>
+      <button onclick="switchTab('onboard')" class="py-4 border-b-2 border-transparent hover:text-pink-theme tab-btn" id="tab-onboard">Onboard tenant</button>
+      <button onclick="switchTab('rooms')" class="py-4 border-b-2 border-transparent hover:text-pink-theme tab-btn" id="tab-rooms">Floors & rooms</button>
+      <button onclick="switchTab('residents')" class="py-4 border-b-2 border-transparent hover:text-pink-theme tab-btn" id="tab-residents">Residents</button>
+      <button onclick="switchTab('documents')" class="py-4 border-b-2 border-transparent hover:text-pink-theme tab-btn" id="tab-documents">Documents</button>
+      <button onclick="switchTab('payments')" class="py-4 border-b-2 border-transparent hover:text-pink-theme tab-btn" id="tab-payments">Rent tracker</button>
+    </nav>
+  </div>
+
+  <!-- Main Content -->
+  <main class="p-8 max-w-7xl mx-auto">
+
+    <!-- OVERVIEW TAB -->
+    <div id="view-overview" class="space-y-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 shadow-sm flex justify-between items-start">
+          <div>
+            <p class="text-[11px] font-extrabold text-stone-400 uppercase tracking-wider">TOTAL BEDS</p>
+            <p class="text-3xl font-bold text-stone-900 mt-2" id="stat-total-beds">79</p>
+            <p class="text-xs font-medium text-stone-400 mt-1">22 rooms · 4 floors</p>
+          </div>
+          <div class="w-10 h-10 bg-[#522138] text-white rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v11m0-4h18m0-7v11M3 11h18M5 11V8a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 shadow-sm flex justify-between items-start">
+          <div>
+            <p class="text-[11px] font-extrabold text-stone-400 uppercase tracking-wider">OCCUPIED</p>
+            <p class="text-3xl font-bold text-stone-900 mt-2" id="stat-occupied">0</p>
+            <p class="text-xs font-medium text-stone-400 mt-1" id="stat-vacant">79 beds vacant</p>
+          </div>
+          <div class="w-10 h-10 bg-[#2d5a43] text-white rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 shadow-sm flex justify-between items-start">
+          <div>
+            <p class="text-[11px] font-extrabold text-stone-400 uppercase tracking-wider">EXPECTED THIS MONTH</p>
+            <p class="text-3xl font-bold text-stone-900 mt-2" id="stat-expected">₹0</p>
+            <p class="text-xs font-medium text-stone-400 mt-1" id="stat-current-month">Aug 2026</p>
+          </div>
+          <div class="w-10 h-10 bg-[#b8862d] text-white rounded-xl flex items-center justify-center font-bold text-lg">₹</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 shadow-sm flex justify-between items-start">
+          <div>
+            <p class="text-[11px] font-extrabold text-stone-400 uppercase tracking-wider">PENDING PAYMENTS</p>
+            <p class="text-3xl font-bold text-stone-900 mt-2" id="stat-pending-count">0</p>
+            <p class="text-xs font-medium text-stone-400 mt-1" id="stat-pending-outstanding">₹0 outstanding</p>
+          </div>
+          <div class="w-10 h-10 bg-[#a33829] text-white rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-7 rounded-2xl border border-stone-200/80 shadow-sm space-y-5">
+          <h2 class="text-base font-serif font-bold text-stone-900">Occupancy by floor</h2>
+          <div id="floorOccupancyBars" class="space-y-4"></div>
+        </div>
+
+        <div class="bg-white p-7 rounded-2xl border border-stone-200/80 shadow-sm flex flex-col justify-between space-y-6">
+          <div>
+            <h2 class="text-base font-serif font-bold text-stone-900">This month's rent collection</h2>
+            <div class="mt-6 flex items-baseline gap-2">
+              <span class="text-4xl font-bold text-[#2d5a43]" id="stat-collected">₹0</span>
+              <span class="text-xs font-medium text-stone-400" id="stat-collected-target">of ₹0 expected</span>
+            </div>
+
+            <div class="w-full bg-stone-100 rounded-full h-3 mt-5 overflow-hidden">
+              <div id="collectionProgressBar" class="bg-[#2d5a43] h-3 rounded-full transition-all duration-700" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <button onclick="switchTab('payments')" class="text-xs font-bold text-[#801b44] hover:underline flex items-center gap-1">
+            Go to rent tracker &rarr;
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ONBOARD TENANT TAB -->
+    <div id="view-onboard" class="hidden max-w-xl mx-auto">
+      <div class="bg-white p-8 rounded-2xl border border-stone-200/80 shadow-sm">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-[#e6206e]">Onboard New Tenant</h2>
+          <p class="text-xs text-stone-400 mt-1">Fill this in once — room allocation, rent, and schedule are set up automatically.</p>
+        </div>
+
+        <form id="onboardForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-stone-700 mb-1">Tenant Name</label>
+            <input type="text" id="name" required placeholder="e.g., Rahul Sharma" class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-stone-700 mb-1">Phone Number</label>
+            <input type="tel" id="phone" required placeholder="e.g., 9876543210" class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Joining Date</label>
+              <input type="date" id="joinDate" required class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Monthly Rent (INR)</label>
+              <input type="number" id="rent" value="8000" required class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Floor</label>
+              <select id="floor" required class="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm bg-white outline-none">
+                <option value="1">Floor 1</option>
+                <option value="2">Floor 2</option>
+                <option value="3">Floor 3</option>
+                <option value="4">Floor 4 (Penthouse)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Room</label>
+              <input type="text" id="roomNumber" placeholder="101" required class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Bed No.</label>
+              <input type="number" id="bed" placeholder="1" min="1" max="4" required class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-stone-700 mb-1">ID Document Upload</label>
+            <input type="file" id="idFile" class="w-full border border-stone-200 rounded-xl p-2 text-xs text-stone-500">
+          </div>
+
+          <button type="submit" id="submitBtn" class="w-full py-3 px-4 rounded-xl font-bold bg-[#e6206e] text-white hover:bg-[#c9185c] transition-all">
+            Confirm & Register
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ROOMS TAB -->
+    <div id="view-rooms" class="hidden space-y-6">
+      <div class="flex gap-2 border-b border-stone-200 pb-4 overflow-x-auto">
+        <button onclick="filterRooms('1')" id="flt-room-1" class="px-5 py-2 rounded-full text-xs font-bold bg-[#522138] text-white">Floor 1</button>
+        <button onclick="filterRooms('2')" id="flt-room-2" class="px-5 py-2 rounded-full text-xs font-bold bg-white border border-stone-200 text-stone-600">Floor 2</button>
+        <button onclick="filterRooms('3')" id="flt-room-3" class="px-5 py-2 rounded-full text-xs font-bold bg-white border border-stone-200 text-stone-600">Floor 3</button>
+        <button onclick="filterRooms('4')" id="flt-room-4" class="px-5 py-2 rounded-full text-xs font-bold bg-white border border-stone-200 text-stone-600">Floor 4</button>
+      </div>
+
+      <div id="roomsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    </div>
+
+    <!-- RESIDENTS TAB -->
+    <div id="view-residents" class="hidden space-y-4">
+      <div class="flex justify-between items-center">
+        <div class="relative w-72">
+          <input type="text" id="resSearch" placeholder="Search by name or room number" class="w-full bg-white border border-stone-200 rounded-full px-4 py-2 text-xs outline-none">
+        </div>
+        <p id="resCount" class="text-xs font-medium text-stone-400"></p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-sm overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-stone-50 border-b border-stone-200/80 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+              <th class="p-4">NAME</th>
+              <th class="p-4">ROOM</th>
+              <th class="p-4">CONTACT</th>
+              <th class="p-4">JOINED</th>
+              <th class="p-4">MONTHLY RENT</th>
+              <th class="p-4">THIS MONTH</th>
+              <th class="p-4 text-right"></th>
+            </tr>
+          </thead>
+          <tbody id="residentsTableBody" class="divide-y divide-stone-100 text-xs font-medium"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DOCUMENTS TAB -->
+    <div id="view-documents" class="hidden space-y-6">
+      <div class="flex gap-2 border-b border-stone-200/80 pb-4">
+        <button class="px-4 py-2 rounded-full text-xs font-bold bg-[#522138] text-white">ID documents</button>
+        <button class="px-4 py-2 rounded-full text-xs font-bold bg-white border border-stone-200 text-stone-600">Rent receipts</button>
+      </div>
+
+      <p class="text-xs font-medium text-stone-500" id="docsSummaryText">0 of 0 tenants have an ID on file</p>
+
+      <div class="p-4 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+        <svg class="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Government ID documents uploaded are stored securely in Google Drive with restricted permissions.</span>
+      </div>
+
+      <div id="documentsListContainer" class="space-y-3"></div>
+    </div>
+
+    <!-- RENT TRACKER TAB -->
+    <div id="view-payments" class="hidden space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div class="bg-white p-5 rounded-2xl border border-stone-200/80 shadow-sm">
+          <p class="text-xs font-bold text-stone-400">Expected</p>
+          <p class="text-2xl font-serif font-bold text-stone-900 mt-1" id="rent-card-expected">₹0</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-stone-200/80 shadow-sm">
+          <p class="text-xs font-bold text-stone-400">Collected</p>
+          <p class="text-2xl font-serif font-bold text-[#2d5a43] mt-1" id="rent-card-collected">₹0</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-stone-200/80 shadow-sm">
+          <p class="text-xs font-bold text-stone-400">Outstanding</p>
+          <p class="text-2xl font-serif font-bold text-[#a33829] mt-1" id="rent-card-outstanding">₹0</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-stone-200/80 shadow-sm overflow-hidden">
+        <div id="rentListContainer" class="divide-y divide-stone-100 text-xs"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JS Modules -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,1 +1,27 @@
 
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #faf8f6;
+  color: #2d2926;
+}
+
+.btn-pink {
+  background-color: #e6206e;
+  color: white;
+}
+
+.btn-pink:hover {
+  background-color: #c9185c;
+}
+
+.text-pink-theme {
+  color: #e6206e;
+}
+
+.border-pink-theme {
+  border-color: #e6206e;
+}
+
+.tab-btn {
+  transition: color 0.2s ease, border-color 0.2s ease;
+}

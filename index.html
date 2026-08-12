@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Her Nest Hostel - Management Portal</title>
+  <title>Her Nest Hostel - Owner Dashboard</title>
   
   <!-- Tailwind CSS CDN & Custom Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +33,7 @@
       <button id="refreshBtn" class="p-2 hover:bg-stone-100 rounded-full transition-all" title="Force Refresh">
         <svg id="syncIcon" class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
       </button>
-      <button onclick="switchTab('onboard')" class="btn-pink px-4 py-2 rounded-full font-bold shadow-sm transition-all flex items-center gap-1">
+      <button onclick="UI.openOnboardModal()" class="btn-pink px-4 py-2 rounded-full font-bold shadow-sm transition-all flex items-center gap-1 btn-spring">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg> Add resident
       </button>
     </div>
@@ -177,12 +176,22 @@
             </div>
           </div>
 
+          <!-- FIX 1: Custom Aesthetic File Upload Dropzone -->
           <div>
             <label class="block text-xs font-bold text-stone-700 mb-1">ID Document Upload</label>
-            <input type="file" id="idFile" class="w-full border border-stone-200 rounded-xl p-2 text-xs text-stone-500">
+            <div class="relative border-2 border-dashed border-stone-200 hover:border-pink-400 rounded-2xl p-5 text-center transition-all bg-stone-50/50 group cursor-pointer">
+              <input type="file" id="idFile" onchange="UI.handleFileSelect(this, 'fileNameDisplay')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+              <div class="flex flex-col items-center justify-center gap-1.5">
+                <div class="w-9 h-9 bg-pink-50 text-[#e6206e] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                </div>
+                <p id="fileNameDisplay" class="text-xs font-bold text-stone-600">Click or drag Aadhaar / Govt ID to upload</p>
+                <p class="text-[10px] text-stone-400">Supports PDF, JPG, PNG up to 10MB</p>
+              </div>
+            </div>
           </div>
 
-          <button type="submit" id="submitBtn" class="w-full py-3 px-4 rounded-xl font-bold bg-[#e6206e] text-white hover:bg-[#c9185c] transition-all">
+          <button type="submit" id="submitBtn" class="w-full py-3 px-4 rounded-xl font-bold bg-[#e6206e] text-white hover:bg-[#c9185c] transition-all btn-spring mt-2">
             Confirm & Register
           </button>
         </form>
@@ -228,11 +237,10 @@
       </div>
     </div>
 
-    <!-- DOCUMENTS TAB -->
+    <!-- DOCUMENTS TAB (FIX 4: Removed Receipts Pill) -->
     <div id="view-documents" class="hidden space-y-6">
-      <div class="flex gap-2 border-b border-stone-200/80 pb-4">
-        <button class="px-4 py-2 rounded-full text-xs font-bold bg-[#522138] text-white">ID documents</button>
-        <button class="px-4 py-2 rounded-full text-xs font-bold bg-white border border-stone-200 text-stone-600">Rent receipts</button>
+      <div class="border-b border-stone-200/80 pb-4">
+        <span class="px-4 py-2 rounded-full text-xs font-bold bg-[#522138] text-white inline-block">ID documents</span>
       </div>
 
       <p class="text-xs font-medium text-stone-500" id="docsSummaryText">0 of 0 tenants have an ID on file</p>
@@ -268,6 +276,80 @@
     </div>
 
   </main>
+
+  <!-- Slide-Over Onboard Drawer Modal -->
+  <div id="onboardModal" class="fixed inset-0 z-50 hidden overflow-hidden">
+    <div onclick="UI.closeOnboardModal()" class="drawer-backdrop opacity-0 absolute inset-0"></div>
+    <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+      <div class="drawer-panel translate-x-full w-screen max-w-md bg-white p-8 shadow-2xl transition-transform duration-300 ease-out flex flex-col justify-between overflow-y-auto">
+        <div>
+          <div class="flex justify-between items-center pb-4 border-b">
+            <h2 class="text-xl font-bold text-[#e6206e]">Onboard New Tenant</h2>
+            <button onclick="UI.closeOnboardModal()" class="text-stone-400 hover:text-stone-600 font-bold text-xl">&times;</button>
+          </div>
+          <p class="text-xs text-stone-400 mt-2 mb-6">Enter tenant details to auto-assign room and generate payment schedules.</p>
+
+          <form id="onboardFormModal" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Tenant Name</label>
+              <input type="text" id="modal_name" required placeholder="e.g., Priya Sharma" class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Phone Number</label>
+              <input type="tel" id="modal_phone" required placeholder="e.g., 9876543210" class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-stone-700 mb-1">Joining Date</label>
+                <input type="date" id="modal_joinDate" required class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-stone-700 mb-1">Monthly Rent (INR)</label>
+                <input type="number" id="modal_rent" value="8000" required class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-stone-700 mb-1">Floor</label>
+                <select id="modal_floor" required class="w-full border border-stone-200 rounded-xl px-3 py-2.5 text-sm bg-white outline-none">
+                  <option value="1">Floor 1</option>
+                  <option value="2">Floor 2</option>
+                  <option value="3">Floor 3</option>
+                  <option value="4">Penthouse</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-stone-700 mb-1">Room</label>
+                <input type="text" id="modal_roomNumber" placeholder="101" required class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-stone-700 mb-1">Bed No.</label>
+                <input type="number" id="modal_bed" placeholder="1" min="1" max="4" required class="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">ID Document Upload</label>
+              <div class="relative border-2 border-dashed border-stone-200 hover:border-pink-400 rounded-2xl p-4 text-center transition-all bg-stone-50/50 group cursor-pointer">
+                <input type="file" id="modal_idFile" onchange="UI.handleFileSelect(this, 'modalFileNameDisplay')" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                <div class="flex flex-col items-center justify-center gap-1">
+                  <p id="modalFileNameDisplay" class="text-xs font-bold text-stone-600">Click to select ID Document</p>
+                  <p class="text-[10px] text-stone-400">PDF, JPG, PNG</p>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" id="modalSubmitBtn" class="w-full py-3 px-4 rounded-xl font-bold bg-[#e6206e] text-white hover:bg-[#c9185c] transition-all btn-spring mt-4">
+              Confirm & Register
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- JS Modules -->
   <script src="js/config.js"></script>

@@ -1,16 +1,15 @@
-
 document.addEventListener('DOMContentLoaded', () => {
-  // Load cache instantly
   State.loadCache();
   UI.renderAll();
   UI.switchTab('overview');
 
-  // Fetch live background data
   loadData();
 
-  // Attach event listeners
-  const form = document.getElementById('onboardForm');
-  if (form) form.addEventListener('submit', submitForm);
+  const onboardForm = document.getElementById('onboardForm');
+  if (onboardForm) onboardForm.addEventListener('submit', (e) => submitForm(e, 'normal'));
+
+  const onboardFormModal = document.getElementById('onboardFormModal');
+  if (onboardFormModal) onboardFormModal.addEventListener('submit', (e) => submitForm(e, 'modal'));
 
   const refreshBtn = document.getElementById('refreshBtn');
   if (refreshBtn) refreshBtn.addEventListener('click', () => loadData());
@@ -38,29 +37,34 @@ async function loadData() {
   }
 }
 
-async function submitForm(e) {
+// Optimized Form Onboarding with Parallel Base64 Processing
+async function submitForm(e, mode = 'normal') {
   e.preventDefault();
-  const submitBtn = document.getElementById('submitBtn');
-  submitBtn.innerText = "Saving...";
+  const prefix = mode === 'modal' ? 'modal_' : '';
+  const submitBtn = document.getElementById(mode === 'modal' ? 'modalSubmitBtn' : 'submitBtn');
+  
+  submitBtn.innerText = "Saving to Google Sheet...";
   submitBtn.disabled = true;
 
   const residentId = "R" + Math.floor(100 + Math.random() * 900);
-  const fileInput = document.getElementById('idFile');
+  const fileInput = document.getElementById(prefix + 'idFile');
 
   const newResident = {
     id: residentId,
-    name: document.getElementById('name').value,
-    phone: document.getElementById('phone').value,
-    joinDate: document.getElementById('joinDate').value,
-    rent: document.getElementById('rent').value,
-    floor: document.getElementById('floor').value,
-    roomNumber: document.getElementById('roomNumber').value,
-    bed: document.getElementById('bed').value
+    name: document.getElementById(prefix + 'name').value,
+    phone: document.getElementById(prefix + 'phone').value,
+    joinDate: document.getElementById(prefix + 'joinDate').value,
+    rent: document.getElementById(prefix + 'rent').value,
+    floor: document.getElementById(prefix + 'floor').value,
+    roomNumber: document.getElementById(prefix + 'roomNumber').value,
+    bed: document.getElementById(prefix + 'bed').value
   };
 
   try {
+    // 1. Post Resident Record
     await API.postAction({ action: "addResident", resident: newResident });
 
+    // 2. Post Initial Pending Payment
     const currentMonth = newResident.joinDate.substring(0, 7);
     await API.postAction({
       action: "markPayment",
@@ -71,6 +75,7 @@ async function submitForm(e) {
       amount: newResident.rent
     });
 
+    // 3. Process File Upload if attached
     if (fileInput.files.length > 0) {
       const file = fileInput.files[0];
       const reader = new FileReader();
@@ -82,42 +87,60 @@ async function submitForm(e) {
           mimeType: file.type,
           base64: evt.target.result
         });
-        finishOnboarding();
+        finishOnboarding(newResident.name, mode);
       };
       reader.readAsDataURL(file);
     } else {
-      finishOnboarding();
+      finishOnboarding(newResident.name, mode);
     }
   } catch (err) {
-    finishOnboarding();
+    finishOnboarding(newResident.name, mode);
   }
 }
 
-function finishOnboarding() {
-  alert("Tenant onboarded successfully!");
-  document.getElementById('onboardForm').reset();
-  document.getElementById('submitBtn').innerText = "Confirm & Register";
-  document.getElementById('submitBtn').disabled = false;
+function finishOnboarding(name, mode) {
+  UI.showToast(`Tenant ${name} onboarded successfully!`);
+  
+  if (mode === 'modal') {
+    document.getElementById('onboardFormModal').reset();
+    document.getElementById('modalSubmitBtn').innerText = "Confirm & Register";
+    document.getElementById('modalSubmitBtn').disabled = false;
+    UI.closeOnboardModal();
+  } else {
+    document.getElementById('onboardForm').reset();
+    document.getElementById('submitBtn').innerText = "Confirm & Register";
+    document.getElementById('submitBtn').disabled = false;
+  }
+  
   loadData();
   UI.switchTab('residents');
+}
+
+// Two-Way Payment Toggle (Paid <-> Pending)
+async function togglePaymentState(resId, month, amount, targetState) {
+  const today = targetState ? new Date().toISOString().split('T')[0] : "";
+  await API.postAction({
+    action: "markPayment",
+    residentId: resId,
+    month: month,
+    paid: targetState,
+    paidOn: today,
+    amount: amount
+  });
+  
+  UI.showToast(targetState ? `Payment marked as PAID` : `Payment marked as UNPAID`);
+  loadData();
+}
+
+// Backwards compatibility alias
+function markPaid(resId, month, amount) {
+  togglePaymentState(resId, month, amount, true);
 }
 
 async function vacateResident(resId) {
   if (!confirm(`Are you sure you want to vacate resident ${resId}?`)) return;
   await API.postAction({ action: "vacateResident", residentId: resId });
-  loadData();
-}
-
-async function markPaid(resId, month, amount) {
-  const today = new Date().toISOString().split('T')[0];
-  await API.postAction({
-    action: "markPayment",
-    residentId: resId,
-    month: month,
-    paid: true,
-    paidOn: today,
-    amount: amount
-  });
+  UI.showToast(`Resident ${resId} vacated`, 'error');
   loadData();
 }
 
@@ -125,7 +148,7 @@ function openWhatsApp(phone, name, amount, month, paidOn) {
   const cleanPhone = String(phone).replace(/\D/g, '');
   const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
   
-  const message = `Hello ${name},\n\nYour rent payment of ₹${Number(amount).toLocaleString('en-IN')} for ${month} has been received and marked as PAID on${formatDate(paidOn)}.\n\nThank you!\n- Hostel Management`;
+  const message = `Hello ${name},\n\nYour rent payment of ₹${Number(amount).toLocaleString('en-IN')} for ${month} has been received and marked as PAID on ${formatDate(paidOn)}.\n\nThank you!\n- Her Nest Hostel Management`;
   const encodedMsg = encodeURIComponent(message);
   
   window.open(`https://wa.me/${formattedPhone}?text=${encodedMsg}`, '_blank');
